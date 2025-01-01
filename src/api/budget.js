@@ -51,9 +51,7 @@ router.delete("/:id", async (req, res, next) => {
 router.get("/balance", async (req, res, next) => {
   try {
     const expenses = await Budget.aggregate([
-      {
-        $match: { type: "expense" },
-      },
+      { $match: { type: "expense" } },
       {
         $group: {
           _id: null,
@@ -61,10 +59,9 @@ router.get("/balance", async (req, res, next) => {
         },
       },
     ]);
+
     const income = await Budget.aggregate([
-      {
-        $match: { type: "income" },
-      },
+      { $match: { type: "income" } },
       {
         $group: {
           _id: null,
@@ -72,12 +69,17 @@ router.get("/balance", async (req, res, next) => {
         },
       },
     ]);
-    const balance = (income[0].totalIncome - expenses[0].totalExpenses).toFixed(
-      2
-    );
+
+    // Safely extract values or use 0 if the array is empty
+    const totalExpenses = expenses.length > 0 ? expenses[0].totalExpenses : 0;
+    const totalIncome = income.length > 0 ? income[0].totalIncome : 0;
+
+    // Calculate balance
+    const balance = (totalIncome - totalExpenses).toFixed(2);
+
     res.json({
-      expenses: expenses[0].totalExpenses,
-      income: income[0].totalIncome,
+      expenses: totalExpenses,
+      income: totalIncome,
       balance,
     });
   } catch (error) {
